@@ -1,33 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <title>Xojaobod Taxi Map</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-    <style>
-        #map {
-            height: 100vh;
-            width: 100%;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <title>Xojaobod Taxi - Marshrut</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <style>
+    #map { height: 100vh; width: 100%; }
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    input, button { margin: 3px 0; width: 200px; padding: 5px; }
+  </style>
 </head>
 <body>
-    <div id="map"></div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map').setView([40.6687, 72.5580], 14); // Xojaobod koordinatalari
+<div class="controls">
+  <label>Qayerdan:</label><br>
+  <input id="from" placeholder="41.000, 72.000"><br>
+  <label>Qayerga:</label><br>
+  <input id="to" placeholder="41.200, 72.300"><br>
+  <button onclick="drawRoute()">Marshrut chizish</button>
+</div>
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+<div id="map"></div>
 
-        L.marker([40.6687, 72.5580]).addTo(map)
-            .bindPopup('Xojaobod markazi')
-            .openPopup();
-    </script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<script>
+  var map = L.map('map').setView([40.9056, 72.1535], 13); // Xojaobod markazi
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  var control;
+
+  function drawRoute() {
+    var fromCoords = document.getElementById('from').value.split(",");
+    var toCoords = document.getElementById('to').value.split(",");
+
+    if (control) {
+      map.removeControl(control);
+    }
+
+    control = L.Routing.control({
+      waypoints: [
+        L.latLng(parseFloat(fromCoords[0]), parseFloat(fromCoords[1])),
+        L.latLng(parseFloat(toCoords[0]), parseFloat(toCoords[1]))
+      ],
+      routeWhileDragging: true
+    }).addTo(map);
+  }
+</script>
+
 </body>
 </html>
