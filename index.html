@@ -1,65 +1,111 @@
 <!DOCTYPE html>
-<html>
+<html lang="uz">
 <head>
-  <meta charset="utf-8" />
-  <title>Xojaobod Taxi - Marshrut</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-  <style>
-    #map { height: 100vh; width: 100%; }
-    .controls {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
-      z-index: 1000;
-    }
-    input, button { margin: 3px 0; width: 200px; padding: 5px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Xarita + Marshrut + Ro'yxat + Sozlamalar</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #map { height: 80vh; }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f1f1f1;
+        }
+        button {
+            padding: 8px 15px;
+            border: none;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
 </head>
 <body>
 
-<div class="controls">
-  <label>Qayerdan:</label><br>
-  <input id="from" placeholder="41.000, 72.000"><br>
-  <label>Qayerga:</label><br>
-  <input id="to" placeholder="41.200, 72.300"><br>
-  <button onclick="drawRoute()">Marshrut chizish</button>
+<div class="buttons">
+    <button onclick="getLocation()">📍 GPS Joylashuv</button>
+    <button onclick="drawRoute()">🛣 Marshrut Chizish</button>
+    <button onclick="showRegister()">📝 Ro'yxatdan O'tish</button>
+    <button onclick="showSettings()">⚙ Sozlamalar</button>
 </div>
 
 <div id="map"></div>
 
+<!-- Ro'yxatdan o'tish -->
+<div id="registerForm" style="display:none; padding:20px;">
+    <h2>Ro'yxatdan o'tish</h2>
+    <input type="text" placeholder="Ism" id="name"><br><br>
+    <input type="text" placeholder="Telefon" id="phone"><br><br>
+    <button onclick="alert('Ro‘yxatdan o‘tildi!')">Yuborish</button>
+</div>
+
+<!-- Sozlamalar -->
+<div id="settingsForm" style="display:none; padding:20px;">
+    <h2>Sozlamalar</h2>
+    <label><input type="checkbox"> Qorong'u rejim</label><br>
+    <label><input type="checkbox"> Bildirishnomalarni yoqish</label><br>
+</div>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 <script>
-  var map = L.map('map').setView([40.9056, 72.1535], 13); // Xojaobod markazi
+    let map = L.map('map').setView([40.88, 72.57], 13); // Xo'jaobod markaz
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
-  }).addTo(map);
+    let userMarker, routingControl;
 
-  var control;
-
-  function drawRoute() {
-    var fromCoords = document.getElementById('from').value.split(",");
-    var toCoords = document.getElementById('to').value.split(",");
-
-    if (control) {
-      map.removeControl(control);
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                let lat = pos.coords.latitude;
+                let lon = pos.coords.longitude;
+                if (userMarker) map.removeLayer(userMarker);
+                userMarker = L.marker([lat, lon]).addTo(map).bindPopup("Sizning joylashuvingiz").openPopup();
+                map.setView([lat, lon], 15);
+            }, err => {
+                alert("Joylashuv olinmadi: " + err.message);
+            });
+        } else {
+            alert("Brauzeringiz GPS'ni qo‘llab-quvvatlamaydi");
+        }
     }
 
-    control = L.Routing.control({
-      waypoints: [
-        L.latLng(parseFloat(fromCoords[0]), parseFloat(fromCoords[1])),
-        L.latLng(parseFloat(toCoords[0]), parseFloat(toCoords[1]))
-      ],
-      routeWhileDragging: true
-    }).addTo(map);
-  }
+    function drawRoute() {
+        if (!userMarker) {
+            alert("Avval GPS tugmasini bosing!");
+            return;
+        }
+        if (routingControl) {
+            map.removeControl(routingControl);
+        }
+        routingControl = L.Routing.control({
+            waypoints: [
+                userMarker.getLatLng(),
+                L.latLng(40.88, 72.57) // Xo'jaobod markazi
+            ],
+            routeWhileDragging: true
+        }).addTo(map);
+    }
+
+    function showRegister() {
+        document.getElementById("registerForm").style.display = "block";
+        document.getElementById("settingsForm").style.display = "none";
+    }
+
+    function showSettings() {
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("settingsForm").style.display = "block";
+    }
 </script>
 
 </body>
